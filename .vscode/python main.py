@@ -1,5 +1,9 @@
 import requests
 from bitcoinlib.wallets import Wallet
+import os
+import sys
+import getopt
+import json
 
 MY_ADDRESS = "AICI_PUI_ADRESA_TA_BTC"
 
@@ -15,21 +19,56 @@ def send_btc(private_key_wif, to_address, amount_btc):
     tx = w.send_to(to_address, amount_btc, network='bitcoin')
     print("Tranzacție trimisă:", tx.txid)
 
-def main():
-    # Exemplu: lista de chei private WIF din portofelul vechi
-    old_wallet_keys = [
-        # "L1aW4aubDFB7yfras2S1mN3bqg9w7r5ZQ5Q2...",  # adaugă aici cheile tale WIF
-    ]
-    for wif in old_wallet_keys:
-        w = Wallet.create('scanwallet', keys=wif, network='bitcoin')
-        address = w.get_key().address
-        balance = get_balance(address)
-        print(f"Adresa {address} are {balance} BTC")
-        if balance > 0:
-            print(f"Trimit {balance} BTC către {MY_ADDRESS}")
-            send_btc(wif, MY_ADDRESS, balance)
+def main(argv):
+    dumpfile = ''
+    datadir = ''
+    
+    try:
+        opts, args = getopt.getopt(argv,"hd:",["dumpfile=","datadir="])
+    except getopt.GetoptError:
+        print('pywallet.py -d <datadir> --dumpwallet')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print('pywallet.py -d <datadir> --dumpwallet')
+            sys.exit()
+        elif opt in ("-d", "--datadir"):
+            datadir = arg
+            
+    if not os.path.isdir(datadir):
+        print("Directorul specificat nu există.")
+        sys.exit(2)
+        
+    wallet_files = [f for f in os.listdir(datadir) if f.endswith('.dat')]
+    
+    if not wallet_files:
+        print("Nu au fost găsite fișiere de portofel în directorul specificat.")
+        sys.exit(2)
+        
+    for wallet_file in wallet_files:
+        wallet_path = os.path.join(datadir, wallet_file)
+        print(f"Procesare fișier portofel: {wallet_path}")
+        os.system(f"bitcoin-cli -datadir={datadir} -rpcuser=utilizator -rpcpassword=parola dumpwallet {wallet_path}.dump")
+        
+        with open(f"{wallet_path}.dump", "r") as f:
+            for line in f:
+                if line.startswith("#") or not line.strip():
+                    continue
+                try:
+                    key_data = json.loads(line)
+                    privkey = key_data.get("privkey")
+                    if privkey:
+                        address = key_data.get("address")
+                        balance = get_balance(address)
+                        print(f"Adresa {address} are {balance} BTC")
+                        if balance > 0:
+                            print(f"Trimit {balance} BTC către {MY_ADDRESS}")
+                            send_btc(privkey, MY_ADDRESS, balance)
+                except json.JSONDecodeError:
+                    print("Eroare la decodarea liniei:", line)
+                    continue
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
     
 pip install bitcoinlib requests
