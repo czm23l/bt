@@ -22,9 +22,10 @@ def send_btc(private_key_wif, to_address, amount_btc):
 def main(argv):
     dumpfile = ''
     datadir = ''
+    passphrase = ''
     
     try:
-        opts, args = getopt.getopt(argv,"hd:",["dumpfile=","datadir="])
+        opts, args = getopt.getopt(argv,"hd:p:",["dumpfile=","datadir=","passphrase="])
     except getopt.GetoptError:
         print('pywallet.py -d <datadir> --dumpwallet')
         sys.exit(2)
@@ -34,6 +35,8 @@ def main(argv):
             sys.exit()
         elif opt in ("-d", "--datadir"):
             datadir = arg
+        elif opt in ("-p", "--passphrase"):
+            passphrase = arg
             
     if not os.path.isdir(datadir):
         print("Directorul specificat nu există.")
