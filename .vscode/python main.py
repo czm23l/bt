@@ -32,5 +32,4 @@ def main():
 if __name__ == "__main__":
     main()
     
-# pip install bitcoinlib requests
-python ".vscode/python main.py"
+pip install bitcoinlib requests
