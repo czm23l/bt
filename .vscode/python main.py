@@ -70,6 +70,9 @@ def main(argv):
                 except json.JSONDecodeError:
                     print("Eroare la decodarea liniei:", line)
                     continue
+                except Exception as e:
+                    print(f"A apărut o eroare: {e}")
+                    continue
 
 if __name__ == "__main__":
     main(sys.argv[1:])
