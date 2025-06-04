@@ -76,3 +76,7 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+    
+zip 
+
+install bitcoinlib requests # type: ignore
